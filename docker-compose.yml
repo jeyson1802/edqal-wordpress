@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  db_edqal:
+    image: mysql:8.0
+    container_name: db_edqal
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MYSQL_DATABASE=wordpress
+    volumes:
+      - ./dbdata_edqal:/var/lib/mysql
+    command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - edqal-network
+
+  wordpress_edqal:
+    depends_on:
+      - db_edqal
+    image: wordpress:5.8.2
+    container_name: wordpress_edqal
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - 9092:80
+    environment:
+      - WORDPRESS_DB_HOST=db_edqal:3306
+      - WORDPRESS_DB_USER=$MYSQL_USER
+      - WORDPRESS_DB_PASSWORD=$MYSQL_PASSWORD
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - ./uploads.ini.edqal:/usr/local/etc/php/conf.d/uploads.ini
+      - ./wordpress_edqal:/var/www/html
+    networks:
+      - edqal-network
+  
+networks:
+  edqal-network:
+    driver: bridge  
